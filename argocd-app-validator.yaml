@@ -1,0 +1,53 @@
+### Blocking unauthorized ArgoCD Applications
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: argocdapplicationvalidator
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  crd:
+    spec:
+      names:
+        kind: ArgoCDApplicationValidator
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package argocdapplication
+
+        any_valid_app {
+        	some i
+            app := input.parameters.applications[i]
+            app.name == input.review.object.metadata.name
+            app.projects[_] == input.review.object.spec.project
+        }
+
+        violation[{"msg": msg, "allowed": allowed}] {
+        	input.review.object.kind == "Application"
+
+        	allowed := input.parameters.applications
+        	not any_valid_app
+
+        	msg := sprintf("Not an allowed Application/Project combination. Check %v", allowed)
+        }
+
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: ArgoCDApplicationValidator
+metadata:
+  name: argocd-application-validator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  match:
+    kinds:
+      - apiGroups: ["*"]
+        kinds: ["Application"]
+  parameters:
+    applications:
+      - name: "applications"
+        projects: [ "default" ]
+      - name: "auth"
+        projects: [ "default" ]
+
