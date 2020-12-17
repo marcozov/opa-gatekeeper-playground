@@ -1,3 +1,10 @@
+### input:
+# argocd:
+#   applications:
+#     - name: "applications"
+#       projects: ["default"]
+
+
 ### Blocking unauthorized ArgoCD Applications
 apiVersion: templates.gatekeeper.sh/v1beta1
 kind: ConstraintTemplate
