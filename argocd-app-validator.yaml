@@ -25,18 +25,21 @@ spec:
 
         any_valid_app {
         	some i
-            app := input.parameters.applications[i]
-            app.name == input.review.object.metadata.name
-            app.projects[_] == input.review.object.spec.project
+        	app := input.parameters.applications[i]
+        	app.name == input.review.object.metadata.name
+        	app.projects[_] == input.review.object.spec.project
         }
 
         violation[{"msg": msg, "allowed": allowed}] {
         	input.review.object.kind == "Application"
 
         	allowed := input.parameters.applications
+        	input_project := input.review.object.spec.project
+		input_app := input.review.object.metadata.name
         	not any_valid_app
 
-        	msg := sprintf("Not an allowed Application/Project combination. Check %v", allowed)
+		msg := sprintf("Not an allowed Application/Project combination.\nInput Application: %v, Input Project: %v.\nAllowed Applications: %v",
+    [input_app, input_project, allowed])
         }
 
 ---
@@ -53,6 +56,8 @@ spec:
         kinds: ["Application"]
   parameters:
     applications:
+      - name: myapp
+        projects: ["myproject"]
       - name: "applications"
         projects: [ "default" ]
       - name: "auth"

@@ -41,7 +41,7 @@ spec:
     #test: ["asdasd"]
     applications:
       - name: myapp
-        project: myproject
+        projects: ["myproject"]
   #parameters:
     #applications:
       #- name: "applications"
