@@ -30,12 +30,31 @@ spec:
         	app.projects[_] == input.review.object.spec.project
         }
 
+        team_name_valid {
+        	real_team_name := split(input.review.object.metadata.labels["argocd.argoproj.io/instance"], "-")[0]
+        	input_team_name := split(input.review.object.metadata.name, "-")[0]
+        	project_team_name := split(input.review.object.spec.project, "-")[0]
+
+        	real_team_name == input_team_name
+        	input_team_name == project_team_name
+        }
+
+        team_name_valid {
+        	input.review.object.metadata.labels["argocd.argoproj.io/instance"] == "applications"
+        }
+
         violation[{"msg": msg, "allowed": allowed}] {
         	input.review.object.kind == "Application"
 
         	allowed := input.parameters.applications
         	input_project := input.review.object.spec.project
 		input_app := input.review.object.metadata.name
+
+        	real_team_name := split(input.review.object.metadata.labels["argocd.argoproj.io/instance"], "-")[0]
+        	input_team_name := split(input.review.object.metadata.name, "-")[0]
+        	project_team_name := split(input.review.object.spec.project, "-")[0]
+
+        	not team_name_valid
         	not any_valid_app
 
 		msg := sprintf("Not an allowed Application/Project combination.\nInput Application: %v, Input Project: %v.\nAllowed Applications: %v",
